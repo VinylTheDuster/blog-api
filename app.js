@@ -9,9 +9,11 @@ app.use(express.json());
 
 // Supabase intialization
 const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    process.env.local.SUPABASE_URL,
+    process.env.local.SUPABASE_ANON_KEY
 );
+
+app.use('/bootstrap', express.static(path.join(process.cwd(), 'node_modules/bootstrap/dist')));
 
 app.get("/", (req, res) => {
     res.send("API online.");
