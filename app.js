@@ -16,7 +16,7 @@ app.use(express.json());
 // Dashboard
 app.use("/dashboard", express.static(path.join(__dirname, "client/build")));
 
-app.get("/dashboard/*", (req, res) => {
+app.get("/dashboard/*splat", (req, res) => {
     res.sendFile(path.join(__dirname, "client/build", "index.html"))
 });
 
@@ -38,15 +38,26 @@ const supabase = createClient(
 
 async function init() {
     try {
-        let { data: articles_list, error } = await supabase
+        let { data: articles_list, errArticles } = await supabase
             .from("articles_list")
             .select("*");
 
-        if (error) throw error;
+        if (errArticles) throw errArticles;
 
         await fs.promises.writeFile(
             articlesPath,
             JSON.stringify(articles_list, null, 2)
+        );
+
+        let { data: articles_tags, errTags } = await supabase
+            .from("articles_tags")
+            .select("*");
+
+        if (errTags) throw errTags;
+
+        await fs.promises.writeFile(
+            tagsPath,
+            JSON.stringify(articles_tags, null, 2)
         );
 
         console.log("Updated from Supabase");
@@ -60,7 +71,7 @@ app.get("/", (req, res) => {
     res.send("API online.");
 });
 
-/// Get data from server to client
+/// Get data from server to both clients
 app.get("/data", (req, res) => {
 
     const { type } = req.query;
@@ -83,7 +94,7 @@ app.post("/login", (req, res) => {
 
     if (
         clientUsername === username &&
-        clientPassword === password &&
+        clientPassword === password &&  
         clientSecret === secret
     ) {
         res.json({
@@ -101,5 +112,5 @@ app.post("/login", (req, res) => {
 
 // Launch after init
 init().then(() => {
-    app.listen(3000, () => console.log("API online on http://localhost:3000"));
-});
+    app.listen(5500, () => console.log("API online on http://localhost:5500"));
+}); 

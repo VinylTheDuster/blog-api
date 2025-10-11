@@ -4,10 +4,11 @@
   "description": "API for blog project.",
   "license": "ISC",
   "author": "William Salembien",
-  "type": "commonjs",
+  "type": "module",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.74.0",

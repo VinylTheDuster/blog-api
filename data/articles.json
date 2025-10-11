@@ -1,8 +1,16 @@
 [
-    {
-        "id": 1,
-        "title": "Introduction à mon projet",
-        "file": "intro.md",
-        "date": "2025-10-08"
-    }
+  {
+    "id": 1,
+    "created_at": "2025-10-10T09:19:27.320257+00:00",
+    "title": "Création du blog !",
+    "short_desc": "Mon premier projet fullstack est enfin déployé. Place à la suite !",
+    "image": null,
+    "tags": [
+      "projet",
+      "apprentissage",
+      "frontend",
+      "backend"
+    ],
+    "md_article": "2025-10-10-intro.md"
+  }
 ]
