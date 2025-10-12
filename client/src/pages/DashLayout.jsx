@@ -2,6 +2,7 @@ import SideBar from "./components/ui/SideBar"
 import TopBar from "./components/ui/TopBar"
 
 import Home from "./Home"
+import TagsEditor from "./TagsEditor"
 
 import { useState, useEffect } from "react"
 
@@ -35,10 +36,13 @@ export default function DashLayout() {
 
     return (
         <div className="flex flex-row h-screen">
-            <SideBar HandlingPage={HandlingPage} />
+            <SideBar HandlingPage={HandlingPage} currentPage={currentPage} />
             <div className="flex flex-col grow">
                 <TopBar />
-                { (currentPage === "home") && <Home articles={articles} tags={tags} /> }
+                <main id="main">
+                    { (currentPage === "home") && <Home articles={articles} tags={tags} /> }
+                    { (currentPage === "tags") && <TagsEditor tags={tags} /> }
+                </main>
             </div>
         </div>
     )

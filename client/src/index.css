@@ -29,6 +29,7 @@
 
     h1 {
         font-family: var(--font-ubuntu);
+        font-size: x-large;
     }
 
     button {
