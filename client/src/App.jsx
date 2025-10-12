@@ -1,11 +1,10 @@
+import DashLayout from "./pages/DashLayout";
 
 function App() {
 
-  return (
-    <main>
-      
-    </main>
-  )
+    return (
+        <DashLayout />
+    )
 }
 
 export default App

@@ -88,6 +88,35 @@ app.get("/data", (req, res) => {
     });
 });
 
+app.get("/api/data", (req, res) => {
+
+    const { type, filter } = req.query;
+    let filePath;
+
+    if (type === "articles") filePath = articlesPath;
+    else if (type === "tags") filePath = tagsPath;
+    else if (type === "version") filePath = versionPath;
+    else return res.status(400).json({ error: "Invalid type" });
+
+    fs.readFile(filePath, "utf-8", (err, rawData) => {
+        if (err) return res.status(500).json({ error: "Reading error" });
+
+        let data;
+        try {
+            data = JSON.parse(rawData);
+        } catch (e) {
+            return res.status(500).json({ error: "Invalid JSON format" })
+        }
+
+        if (type === "articles" &&  Array.isArray(data)) {
+            if (filter === "new") data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            else if (filter === "old") data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        }
+
+        res.type("json").send(data);
+    });
+});
+
 /// Auth
 app.post("/login", (req, res) => {
     const { clientUsername, clientPassword, clientSecret } = req.body;
