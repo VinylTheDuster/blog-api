@@ -1,17 +1,27 @@
-import express from "express";
+import express, { raw } from "express";
+import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+// Middlewares import
+import Auth from "./middlewares/auth"
+import { log, table } from "console";
+
+// Env
 dotenv.config();
+const username = process.env.API_INTERFACE_USERNAME;
+const password = process.env.API_INTERFACE_PASSWORD;
+const secret = process.env.API_INTERFACE_FRUIT;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 // Dashboard
 app.use("/dashboard", express.static(path.join(__dirname, "client/build")));
@@ -26,9 +36,7 @@ const articlesPath = path.join(dataPath, "articles.json");
 const tagsPath = path.join(dataPath, "tags.json");
 const versionPath = path.join(dataPath, "version.json");
 
-const username = process.env.API_INTERFACE_USERNAME;
-const password = process.env.API_INTERFACE_PASSWORD;
-const secret = process.env.API_INTERFACE_FRUIT;
+const filesToWatch = [ articlesPath, tagsPath ]
 
 // Supabase init
 const supabase = createClient(
@@ -66,28 +74,64 @@ async function init() {
     }
 }
 
+// Watch every changes on the json files to update supabase
+filesToWatch.forEach(filePath => {
+    fs.watch(filePath, (eventType, filename) => {
+        if (eventType === "change") {
+            console.log(`${filename} has been modified!`);
+            fs.readFile(filePath, "utf-8", async (err, data) => {
+                if (err) return console.error("Read error:", err);
+                try {
+                    const json = JSON.parse(data);
+                    console.log("Nouveau contenu:", json);
+
+                    let tableName;
+
+                    if (filePath === articlesPath) tableName = "articles_list"
+                    else if (filePath === tagsPath) tableName = "articles_tags"
+
+                    const { data: currentRows, error: selectError } = await supabase
+                        .from(tableName)
+                        .select("id");
+
+                    if (selectError) throw selectError;
+
+                    const idsInJson = json.map(item => item.id);
+                    const idsInDb = currentRows.map(row => row.id);
+
+                    const idsToDelete = idsInDb.filter(id => !idsInJson.includes(id));
+
+                    if (idsToDelete.length > 0) {
+                        const { error: deleteError } = await supabase
+                            .from(tableName)
+                            .delete()
+                            .in("id", idsToDelete);
+                        if (deleteError) throw deleteError;
+                    }
+
+                    const { error: upsertError } = await supabase
+                        .from(tableName)
+                        .upsert(json)
+                        
+                    if (upsertError) {
+                        console.error("Supabase error during update:", upsertError);
+                    } else {
+                        console.log("Supabase table updated with success!")
+                    }
+                } catch (e) {
+                    console.error("Invalid JSON:", err);
+                }
+            });
+        }
+    });
+});
+
 // Routes
 app.get("/", (req, res) => {
     res.send("API online.");
 });
 
 /// Get data from server to both clients
-app.get("/data", (req, res) => {
-
-    const { type } = req.query;
-    let filePath;
-
-    if (type === "articles") filePath = articlesPath;
-    else if (type === "tags") filePath = tagsPath;
-    else if (type === "version") filePath = versionPath;
-    else return res.status(400).json({ error: "Invalid type" });
-
-    fs.readFile(filePath, "utf-8", (err, data) => {
-        if (err) return res.status(500).json({ error: "Reading error" });
-        res.type("json").send(data);
-    });
-});
-
 app.get("/api/data", (req, res) => {
 
     const { type, filter } = req.query;
@@ -117,26 +161,53 @@ app.get("/api/data", (req, res) => {
     });
 });
 
-/// Auth
-app.post("/login", (req, res) => {
-    const { clientUsername, clientPassword, clientSecret } = req.body;
+/// Add data to local jsons
+app.post("/api/insert", (req, res) => {
+    const { type } = req.query;
 
-    if (
-        clientUsername === username &&
-        clientPassword === password &&  
-        clientSecret === secret
-    ) {
-        res.json({
-            success: true,
-            message: "Access granted",
-            redirectUrl: "/client/dashboard"
+    let filePath;
+    if (type === "articles") filePath = articlesPath;
+    else if (type === "tags") filePath = tagsPath;
+    else return res.status(400).json({ error: "Invalid type" });
+
+    fs.readFile(filePath, "utf-8", (err, rawData) => {
+        if (err) return res.status(500).json({ error: "Reading error" })
+        
+        let data;
+        try {
+            data = JSON.parse(rawData);
+        } catch (e) {
+            return res.status(500).json({ error: "Invalid JSON format" })
+        }
+
+        const dataToInsert = req.body;
+
+        if (!Array.isArray(dataToInsert)) {
+            return res.status(400).json({ error: "Data must be an array!" });
+        }
+
+        data.push(...dataToInsert);
+
+        fs.writeFile(filePath, JSON.stringify(data, null, 2), (err) => {
+            if (err) {
+                return res
+                    .status(500)
+                    .json({ error: "Writing error: Something went wrong!" });
+            }
+            res
+                .status(200)
+                .json({ success: true, inserted: dataToInsert.length });
         });
-    } else {
-        res.status(401).json({
-            success: false,
-            message: "Invalid credentials"
-        });
-    }
+    });
+});
+
+
+
+/// Auth
+app.post("/login", Auth, (req, res) => {
+    res.json({
+        redirectUrl: "/client/dashboard"
+    });
 });
 
 // Launch after init

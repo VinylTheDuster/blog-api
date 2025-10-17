@@ -29,11 +29,13 @@ export default function DashLayout() {
         fetch(`${API_URL}/data?type=tags`)
             .then(res => res.json())
             .then(data => setTags(data))
-            .catch(err => console.error("API Tags Error", err))
+            .catch(err => console.error("API Tags Error", err));
     }, [API_URL])
 
     const HandlingPage = (page) => setCurrentPage(page);
 
+    console.log(tags);
+    
     return (
         <div className="flex flex-row h-screen">
             <SideBar HandlingPage={HandlingPage} currentPage={currentPage} />
