@@ -1,5 +1,4 @@
 import express, { raw } from "express";
-import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -7,8 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // Middlewares import
-import Auth from "./middlewares/auth"
-import { log, table } from "console";
+import Auth from "./middlewares/auth.js"
 
 // Env
 dotenv.config();
@@ -21,7 +19,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
-app.use(cors());
 
 // Dashboard
 app.use("/dashboard", express.static(path.join(__dirname, "client/build")));
