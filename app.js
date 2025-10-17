@@ -1,4 +1,5 @@
 import express, { raw } from "express";
+import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -19,6 +20,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 // Dashboard
 app.use("/dashboard", express.static(path.join(__dirname, "client/build")));
