@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-export default function TagModify({ tags, selectedTag, handleSubmit,  }) {
+export default function TagModify({ tags, selectedTag, handleSubmit }) {
 
     const [hexColor, setHexColor] = useState((tags.at(selectedTag - 1))?.tag_color ?? "");
     const [checked, setChecked] = useState((tags.at(selectedTag - 1))?.is_white ?? true);
@@ -9,7 +9,6 @@ export default function TagModify({ tags, selectedTag, handleSubmit,  }) {
 
     return (
         <div className="bg-zinc-700 text-zinc-100 font-ubuntu">
-            {}
             <span className="text-2xl">{tags.at(selectedTag - 1).tag_visual} - Tag Modifying</span>
             <div className="flex mt-6 gap-6">
                 <div className="flex flex-col gap-4">

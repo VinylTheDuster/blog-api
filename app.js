@@ -201,7 +201,47 @@ app.post("/api/insert", (req, res) => {
     });
 });
 
+app.post("/api/delete", (req, res) => {
+    const { type } = req.query;
 
+    let filePath;
+    if (type === "articles") filePath = articlesPath;
+    else if (type === "tags") filePath = tagsPath;
+    else return res.status(400).json({ error: "Invalid type" });
+
+    fs.readFile(filePath, "utf-8", (err, rawData) => {
+        if (err) return res.status(500).json({ error: "Reading error" })
+
+        let data;
+        try {
+            data = JSON.parse(rawData);
+        } catch (e) {
+            return res.status(500).json({ error: "Invalid JSON format" })
+        }
+
+        //check inputed data
+        const dataToDelete = req.body;
+
+        if (!Array.isArray(dataToDelete)) {
+            return res.status(400).json({ error: "Data must be an array!" });
+        }
+
+        const idsToDelete = dataToDelete.map(obj => obj.id);
+        const result = data.filter(item => !idsToDelete.includes(item.id));
+
+
+        fs.writeFile(filePath, JSON.stringify(result, null, 2), (err) => {
+            if (err) {
+                return res
+                    .status(500)
+                    .json({ error: "Writing error: Something went wrong!" });
+            }
+            res
+                .status(200)
+                .json({ success: true, deleted: dataToDelete.length });    
+        });
+    });
+});
 
 /// Auth
 app.post("/login", Auth, (req, res) => {

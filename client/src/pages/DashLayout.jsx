@@ -26,11 +26,17 @@ export default function DashLayout() {
 
     // Fetch tags
     useEffect(() => {
-        fetch(`${API_URL}/data?type=tags`)
+        fetch(`${API_URL}/data`)
             .then(res => res.json())
             .then(data => setTags(data))
             .catch(err => console.error("API Tags Error", err));
     }, [API_URL])
+
+    function deleteBackTags(tags) {
+        if(tags) {
+            fetch(`${API_URL}/data?type=tags`)
+        }
+    }
 
     const HandlingPage = (page) => setCurrentPage(page);
 
@@ -43,9 +49,9 @@ export default function DashLayout() {
                 <TopBar />
                 <main id="main">
                     { (currentPage === "home") && <Home articles={articles} tags={tags} /> }
-                    { (currentPage === "tags") && <TagsEditor tags={tags} /> }
+                    { (currentPage === "tags") && <TagsEditor tags={tags} deleteTagObject={deleteBackTags} /> }
                 </main>
             </div>
         </div>
     )
-}
+}console.log(checkers);

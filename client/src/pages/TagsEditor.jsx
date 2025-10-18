@@ -2,6 +2,7 @@ import Modal from 'react-modal';
 import { useEffect, useState } from 'react';
 
 import TagModify from './components/tagseditor/TagModify';
+import TagDelete from './components/tagseditor/TagDelete';
 
 export default function TagsEditor({ tags, createTagObject, updatedTagObject, deleteTagObject }) {
 
@@ -13,10 +14,13 @@ export default function TagsEditor({ tags, createTagObject, updatedTagObject, de
     const [omniCheckerTags, setOmniCheckerTags] = useState(false);
 
     useEffect(() => {
-        setCheckers(tags.map(tag => ({ id: tag.id, checked: false })));
+        setCheckers(prev =>
+            tags.map(tag => {
+                const existing = prev.find(c => c.id === tag.id);
+                return existing || { id: tag.id, checked: false };
+            })
+        );
     }, [tags]);
-
-    
 
     const [overlayState, setOverlayState] = useState("");
 
@@ -41,7 +45,7 @@ export default function TagsEditor({ tags, createTagObject, updatedTagObject, de
 
         const tagName = tagVisual.toLowerCase().normalize()
         const data = {
-            id: 1,
+            id: tags.at(-1).id + 1,
             tag_name: tagName,
             tag_color: tagColor,
             tag_visual: tagVisual,
@@ -57,8 +61,8 @@ export default function TagsEditor({ tags, createTagObject, updatedTagObject, de
                     <input type="text" className="self-center bg-zinc-300 text-zinc-800 h-fit px-4 py-0.5 rounded-md ring-3 ring-zinc-500 transition-all focus:ring-zinc-300" placeholder="Search Tags..."/>
                 </div>
                 <div className='flex gap-4'>
-                    <button onClick={() => {setOverlayState("add"), openModal()}} className='bg-zinc-600 p-2 rounded-2xl transition-all hover:bg-zinc-500 active:bg-zinc-400 cursor-pointer'><img src="/icons/newtag.svg" alt="" /></button>
-                    <button onClick={() => {setOverlayState("remove"), openModal()}} className='bg-zinc-600 p-2 rounded-2xl transition-all hover:bg-zinc-500 active:bg-zinc-400 cursor-pointer'><img src="/icons/remove.svg" alt="" /></button>
+                    <button onClick={() => {setOverlayState("add"); openModal()}} className='bg-zinc-600 p-2 rounded-2xl transition-all hover:bg-zinc-500 active:bg-zinc-400 cursor-pointer'><img src="/icons/newtag.svg" alt="" /></button>
+                    <button onClick={() => {setOverlayState("delete"); openModal()}} className='bg-zinc-600 p-2 rounded-2xl transition-all hover:bg-zinc-500 active:bg-zinc-400 cursor-pointer'><img src="/icons/remove.svg" alt="" /></button>
                 </div>
             </div>
             <div className="overflow-y-auto">
@@ -114,9 +118,9 @@ export default function TagsEditor({ tags, createTagObject, updatedTagObject, de
                 onRequestClose={closeModal}
                 style={modalStyle}
             >
-                {(overlayState === "add") && <TagOverlay tags={tags} selectedTag={currentSelectedTag} handleSubmit={handleSubmit} />}
+                {(overlayState === "add") && <TagAdd tags={tags} selectedTag={currentSelectedTag} handleSubmit={handleSubmit} />}
                 {(overlayState === "modify") && <TagModify tags={tags} selectedTag={currentSelectedTag} handleSubmit={handleSubmit} />}
-                {(overlayState === "delete") && <TagOverlay tags={tags} selectedTag={currentSelectedTag} handleSubmit={handleSubmit} />}
+                {(overlayState === "delete") && <TagDelete abort={closeModal} deleteTags={deleteTagObject} />} {/* Attention à deleteTagObject, il faut le rendre fonctionnel vers le parent. */}
             </Modal>
         </div>
     )
