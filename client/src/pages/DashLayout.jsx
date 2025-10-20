@@ -26,15 +26,28 @@ export default function DashLayout() {
 
     // Fetch tags
     useEffect(() => {
-        fetch(`${API_URL}/data`)
+        fetch(`${API_URL}/data?type=tags`)
             .then(res => res.json())
             .then(data => setTags(data))
             .catch(err => console.error("API Tags Error", err));
     }, [API_URL])
 
-    function deleteBackTags(tags) {
-        if(tags) {
-            fetch(`${API_URL}/data?type=tags`)
+    function deleteBackTags(tagsToDelete) {
+        if(tagsToDelete && tagsToDelete.length > 0) {
+            fetch(`${API_URL}/delete/data?type=tags`, {
+                method: "Post",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(tagsToDelete)
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Successful deletion:", data);
+            })
+            .catch(err => {
+                console.error("Deletion error:", err);
+            });
         }
     }
 
@@ -54,4 +67,4 @@ export default function DashLayout() {
             </div>
         </div>
     )
-}console.log(checkers);
+}
